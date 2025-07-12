@@ -784,12 +784,14 @@
         }
     });
 
-    // Function to inject ElevenLabs widget (agentId now passed in)
+    // Function to inject ElevenLabs voice widget invisibly
 function injectElevenLabsWidget(agentId, userId, userName, userEmail, lessonId) {
-    if (document.querySelector('elevenlabs-convai')) {
+    // Prevent multiple injections
+    if (window.__elevenlabsInjected) {
         console.log('✅ ElevenLabs widget already injected');
         return;
     }
+    window.__elevenlabsInjected = true;
 
     const dynamicVars = {
         user_id: userId || "1",
@@ -798,25 +800,35 @@ function injectElevenLabsWidget(agentId, userId, userName, userEmail, lessonId) 
         lesson_id: lessonId || "4713"
     };
 
-    console.log("✅ elevenlabsUserVars injected:", dynamicVars);
+    console.log("✅ elevenlabsUserVars injected (hidden):", dynamicVars);
 
-    setTimeout(() => {
-        const convai = document.createElement("elevenlabs-convai");
-        convai.setAttribute("agent-id", agentId); // passed in now
-        convai.setAttribute("dynamic-variables", JSON.stringify(dynamicVars));
-        document.body.appendChild(convai);
+    const convai = document.createElement("elevenlabs-convai");
+    convai.setAttribute("agent-id", agentId);
+    convai.setAttribute("dynamic-variables", JSON.stringify(dynamicVars));
+    convai.style.display = "none"; // ✅ Hides the visual widget completely
+    document.body.appendChild(convai);
 
-        const script = document.createElement("script");
-        script.src = "https://unpkg.com/@elevenlabs/convai-widget-embed";
-        script.async = true;
-        script.type = "text/javascript";
-        script.onload = () => console.log('✅ ElevenLabs script loaded');
-        script.onerror = () => {
-            console.error('❌ Failed to load ElevenLabs script');
-            alert('⚠️ Failed to load Pauline.');
-        };
-        document.body.appendChild(script);
-    }, 200);
+    const script = document.createElement("script");
+    script.src = "https://unpkg.com/@elevenlabs/convai-widget-embed";
+    script.async = true;
+    script.type = "text/javascript";
+    script.onload = () => {
+        console.log('✅ ElevenLabs voice widget loaded (hidden)');
+
+        // ✅ Optional: auto-remove widget after 60 seconds
+        setTimeout(() => {
+            convai.remove();
+            window.__elevenlabsInjected = false;
+            console.log("🧹 ElevenLabs widget cleaned up");
+        }, 60000);
+    };
+    script.onerror = () => {
+        console.error('❌ Failed to load ElevenLabs script');
+        alert('⚠️ Failed to load Pauline.');
+        window.__elevenlabsInjected = false;
+    };
+
+    document.body.appendChild(script);
 }
 
     streamModeBtn.addEventListener('click', () => {
