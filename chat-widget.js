@@ -784,64 +784,59 @@
         }
     });
 
-    // Function to inject ElevenLabs voice widget invisibly
-function injectElevenLabsWidget(agentId, userId, userName, userEmail, lessonId) {
-    // Prevent multiple injections
+    // Voice-only injection (no ElevenLabs visual UI)
+function injectElevenLabsVoiceOnly(agentId, userId, userName, userEmail, lessonId) {
     if (window.__elevenlabsInjected) {
-        console.log('✅ ElevenLabs widget already injected');
+        console.log("✅ ElevenLabs already streaming");
         return;
     }
     window.__elevenlabsInjected = true;
 
-    const dynamicVars = {
-        user_id: userId || "1",
-        user_name: userName || "Guest",
-        user_email: userEmail || "guest@example.com",
-        lesson_id: lessonId || "4713"
-    };
-
-    console.log("✅ elevenlabsUserVars injected (hidden):", dynamicVars);
-
     const convai = document.createElement("elevenlabs-convai");
     convai.setAttribute("agent-id", agentId);
-    convai.setAttribute("dynamic-variables", JSON.stringify(dynamicVars));
-    convai.style.display = "none"; // ✅ Hides the visual widget completely
+    convai.setAttribute("dynamic-variables", JSON.stringify({
+        user_id: userId,
+        user_name: userName,
+        user_email: userEmail,
+        lesson_id: lessonId
+    }));
+    convai.style.display = "none"; // hide UI
     document.body.appendChild(convai);
 
     const script = document.createElement("script");
     script.src = "https://unpkg.com/@elevenlabs/convai-widget-embed";
     script.async = true;
-    script.type = "text/javascript";
     script.onload = () => {
-        console.log('✅ ElevenLabs voice widget loaded (hidden)');
-
-        // ✅ Optional: auto-remove widget after 60 seconds
+        console.log("✅ ElevenLabs voice stream started");
         setTimeout(() => {
             convai.remove();
             window.__elevenlabsInjected = false;
-            console.log("🧹 ElevenLabs widget cleaned up");
+            console.log("🧹 ElevenLabs cleaned after timeout");
         }, 60000);
     };
     script.onerror = () => {
-        console.error('❌ Failed to load ElevenLabs script');
-        alert('⚠️ Failed to load Pauline.');
+        console.error("❌ ElevenLabs script load failed");
+        alert("⚠️ Voice stream failed.");
         window.__elevenlabsInjected = false;
     };
-
     document.body.appendChild(script);
 }
 
-    streamModeBtn.addEventListener('click', () => {
-    const userId = window.ChatWidgetConfig?.user?.id || (emailInput ? emailInput.value.trim() : '');
-    const userName = window.ChatWidgetConfig?.user?.name || (nameInput ? nameInput.value.trim() : '');
-    const userEmail = window.ChatWidgetConfig?.user?.email || (emailInput ? emailInput.value.trim() : '');
-    const lessonId = window.ChatWidgetConfig?.user?.lessonId || '4713';
+    document.addEventListener("DOMContentLoaded", () => {
+    const streamBtn = document.querySelector(".chat-stream-mode-btn"); // 📞 button inside chat UI
+    if (!streamBtn) return;
 
-    const agentId = window.ChatWidgetConfig?.agentId;
-    if (!agentId) return alert('Missing Pauline agent ID');
-
-    injectElevenLabsWidget(agentId, userId, userName, userEmail, lessonId);
-    alert('📞 Connecting you to Pauline...');
+    streamBtn.addEventListener("click", () => {
+        const cfg = window.ChatWidgetConfig;
+        injectElevenLabsVoiceOnly(
+            cfg.agentId,
+            cfg.user?.id,
+            cfg.user?.name,
+            cfg.user?.email,
+            cfg.user?.lessonId
+        );
+        alert("📞 Talking to Pauline (voice only)...");
+    });
 });
 
     function sendVoiceMessage(audioBlob, metadata) {
